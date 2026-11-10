@@ -5,7 +5,6 @@ import {
   ArrowUp,
   ArrowUpRight,
   Check,
-  ChevronDown,
   Code2,
   Copy,
   Github,
@@ -24,6 +23,7 @@ import {
 import { content, languageNames, type Language, type Theme } from "./content";
 import {
   contactEmail,
+  detectVisitorLanguage,
   languages,
   readPreference,
   resolveLanguage,
@@ -32,6 +32,8 @@ import {
   themes,
 } from "./preferences.mjs";
 import Orbital from "./Orbital";
+import Dropdown from "./Dropdown";
+import LanguagePrompt from "./LanguagePrompt";
 
 const sectionIds = ["services", "platforms", "about"];
 
@@ -96,6 +98,12 @@ export default function App() {
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">(
     "idle",
   );
+  const [languagePrompt, setLanguagePrompt] = useState(false);
+  const [recommendedLanguage, setRecommendedLanguage] =
+    useState<Language | null>(null);
+  const languageChosen = useRef(
+    languages.includes(readPreference("linyu-language") ?? ""),
+  );
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyAttempt = useRef(0);
   const t = content[language];
@@ -103,6 +111,35 @@ export default function App() {
   const email = contactEmail(language);
   const ThemeIcon =
     theme === "system" ? Monitor : theme === "light" ? Sun : Moon;
+
+  useEffect(() => {
+    if (languageChosen.current) return;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2500);
+    let cancelled = false;
+    detectVisitorLanguage(navigator.languages, controller.signal).then(
+      (result) => {
+        clearTimeout(timeout);
+        if (cancelled || languageChosen.current) return;
+        const detected = result.language as Language;
+        setLanguage(detected);
+        setRecommendedLanguage(result.source === "ip" ? detected : null);
+        setLanguagePrompt(true);
+      },
+    );
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, []);
+
+  function chooseLanguage(value: Language) {
+    languageChosen.current = true;
+    setLanguage(value);
+    savePreference("linyu-language", value);
+    setLanguagePrompt(false);
+  }
 
   useEffect(() => {
     const media = matchMedia("(prefers-color-scheme: dark)");
@@ -118,7 +155,6 @@ export default function App() {
     document
       .querySelector('meta[name="description"]')
       ?.setAttribute("content", t.description);
-    savePreference("linyu-language", language);
     copyAttempt.current++;
     if (copyTimer.current) clearTimeout(copyTimer.current);
     setCopyStatus("idle");
@@ -182,38 +218,31 @@ export default function App() {
             ))}
           </nav>
           <div className="header-controls">
-            <label className="select-control language-control">
-              <Globe2 size={16} aria-hidden="true" />
-              <select
-                value={language}
-                onChange={(event) =>
-                  setLanguage(event.target.value as Language)
-                }
-                aria-label={t.language}
-              >
-                {Object.entries(languageNames).map(([value, label]) => (
-                  <option key={value} value={value} lang={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={12} aria-hidden="true" />
-            </label>
-            <label className="select-control theme-control" title={t.theme}>
-              <ThemeIcon size={17} aria-hidden="true" />
-              <select
-                value={theme}
-                onChange={(event) => setTheme(event.target.value as Theme)}
-                aria-label={t.theme}
-              >
-                {themes.map((value, index) => (
-                  <option key={value} value={value}>
-                    {t.themes[index]}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={12} aria-hidden="true" />
-            </label>
+            <Dropdown<Language>
+              className="language-control"
+              label={t.language}
+              value={language}
+              options={(
+                Object.entries(languageNames) as [Language, string][]
+              ).map(([value, label]) => ({ value, label, lang: value }))}
+              icon={<Globe2 size={16} aria-hidden="true" />}
+              onChange={chooseLanguage}
+            />
+            <Dropdown<Theme>
+              className="theme-control"
+              label={t.theme}
+              value={theme}
+              options={(themes as Theme[]).map((value, index) => {
+                const Icon = [Monitor, Sun, Moon][index];
+                return {
+                  value,
+                  label: t.themes[index],
+                  icon: <Icon size={16} aria-hidden="true" />,
+                };
+              })}
+              icon={<ThemeIcon size={17} aria-hidden="true" />}
+              onChange={setTheme}
+            />
             <a href="#contact" className="header-contact">
               {t.contact}
               <ArrowUpRight size={15} />
@@ -248,6 +277,16 @@ export default function App() {
           </nav>
         )}
       </header>
+
+      {languagePrompt && (
+        <LanguagePrompt
+          language={language}
+          recommended={recommendedLanguage}
+          onChange={setLanguage}
+          onConfirm={() => chooseLanguage(language)}
+          onDismiss={() => setLanguagePrompt(false)}
+        />
+      )}
 
       <main id="main">
         <section className="hero" aria-labelledby="hero-title">

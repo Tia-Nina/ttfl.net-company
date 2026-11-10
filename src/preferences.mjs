@@ -10,6 +10,36 @@ export function resolveLanguage(preferredLanguages) {
   return "en";
 }
 
+export function countryLanguage(country) {
+  if (typeof country !== "string" || !/^[a-z]{2}$/i.test(country)) return null;
+  const code = country.toUpperCase();
+  if (code === "XX" || code === "ZZ") return null;
+  if (["CN", "HK", "MO", "TW"].includes(code)) return "zh-CN";
+  return code === "JP" ? "ja" : "en";
+}
+
+export async function detectVisitorLanguage(
+  preferredLanguages,
+  signal,
+  request = fetch,
+) {
+  try {
+    const response = await request("https://api.country.is/", {
+      signal,
+      cache: "no-store",
+      credentials: "omit",
+      referrerPolicy: "no-referrer",
+    });
+    if (!response.ok) throw new Error("Country lookup unavailable");
+    const result = await response.json();
+    const language = countryLanguage(result?.country);
+    if (language) return { language, source: "ip" };
+  } catch {
+    // A blocked, timed-out, or invalid lookup falls back to browser preferences.
+  }
+  return { language: resolveLanguage(preferredLanguages), source: "browser" };
+}
+
 export function contactEmail(language) {
   return language.startsWith("zh") ? "tiatf@qq.com" : "linxtia@gmail.com";
 }
