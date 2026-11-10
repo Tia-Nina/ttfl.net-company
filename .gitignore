@@ -1,0 +1,6 @@
+node_modules/
+dist/
+*.local
+*.tsbuildinfo
+.sites.local/
+logs/
