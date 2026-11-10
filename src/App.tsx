@@ -95,9 +95,10 @@ export default function App() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [activeService, setActiveService] = useState<number | null>(0);
   const [paused, setPaused] = useState(false);
-  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">(
-    "idle",
-  );
+  const [copyStatus, setCopyStatus] = useState<{
+    person: "lin" | "yu";
+    status: "copied" | "failed";
+  } | null>(null);
   const [languagePrompt, setLanguagePrompt] = useState(false);
   const [recommendedLanguage, setRecommendedLanguage] =
     useState<Language | null>(null);
@@ -108,7 +109,15 @@ export default function App() {
   const copyAttempt = useRef(0);
   const t = content[language];
   const resolvedTheme = resolveTheme(theme, systemDark);
-  const email = contactEmail(language);
+  const people = [
+    { id: "lin", name: "Lin", role: t.linRole, email: contactEmail(language) },
+    {
+      id: "yu",
+      name: "Yu",
+      role: t.yuRole,
+      email: contactEmail(language, "yu"),
+    },
+  ] as const;
   const ThemeIcon =
     theme === "system" ? Monitor : theme === "light" ? Sun : Moon;
 
@@ -157,7 +166,7 @@ export default function App() {
       ?.setAttribute("content", t.description);
     copyAttempt.current++;
     if (copyTimer.current) clearTimeout(copyTimer.current);
-    setCopyStatus("idle");
+    setCopyStatus(null);
   }, [language, t]);
 
   useEffect(() => {
@@ -182,17 +191,19 @@ export default function App() {
     };
   }, []);
 
-  async function copyEmail() {
+  async function copyEmail(person: "lin" | "yu", email: string) {
     const attempt = ++copyAttempt.current;
     if (copyTimer.current) clearTimeout(copyTimer.current);
     try {
       await navigator.clipboard.writeText(email);
-      if (attempt === copyAttempt.current) setCopyStatus("copied");
+      if (attempt === copyAttempt.current)
+        setCopyStatus({ person, status: "copied" });
     } catch {
-      if (attempt === copyAttempt.current) setCopyStatus("failed");
+      if (attempt === copyAttempt.current)
+        setCopyStatus({ person, status: "failed" });
     }
     if (attempt === copyAttempt.current)
-      copyTimer.current = setTimeout(() => setCopyStatus("idle"), 3500);
+      copyTimer.current = setTimeout(() => setCopyStatus(null), 3500);
   }
 
   return (
@@ -431,14 +442,11 @@ export default function App() {
                 </div>
                 <div className="platform-info">
                   <p>{t.platformTypes[0]}</p>
-                  <h3>
-                    TapTap<span className="platform-status">{t.coming}</span>
-                  </h3>
+                  <h3>TapTap</h3>
                 </div>
                 <div className="platform-placeholder">
                   <span className="status-dot" />
-                  {t.reserved}
-                  <span>—</span>
+                  {t.studio}
                 </div>
               </article>
               <article className="platform-card platform-minecraft">
@@ -456,15 +464,11 @@ export default function App() {
                 </div>
                 <div className="platform-info">
                   <p>{t.platformTypes[1]}</p>
-                  <h3>
-                    {t.minecraft}
-                    <span className="platform-status">{t.coming}</span>
-                  </h3>
+                  <h3>{t.minecraft}</h3>
                 </div>
                 <div className="platform-placeholder">
                   <span className="status-dot" />
-                  {t.reserved}
-                  <span>—</span>
+                  {t.studio}
                 </div>
               </article>
               <article className="platform-card platform-github">
@@ -487,14 +491,11 @@ export default function App() {
                 </div>
                 <div className="platform-info">
                   <p>{t.platformTypes[2]}</p>
-                  <h3>
-                    GitHub<span className="platform-status">{t.coming}</span>
-                  </h3>
+                  <h3>GitHub</h3>
                 </div>
                 <div className="platform-placeholder">
                   <span className="status-dot" />
-                  {t.reserved}
-                  <span>—</span>
+                  {t.coming}
                 </div>
               </article>
             </div>
@@ -547,52 +548,45 @@ export default function App() {
                 />
               </h2>
               <div className="contact-people">
-                <article className="person-card">
-                  <div className="person-topline">
-                    <h3>
-                      Lin<span>{t.linRole}</span>
-                    </h3>
-                    <a
-                      href={`mailto:${email}`}
-                      className="person-email-action icon-button"
-                      aria-label={`${t.emailAction} — Lin`}
-                    >
-                      <ArrowUpRight size={23} />
-                    </a>
-                  </div>
-                  <div className="person-email">
-                    <a href={`mailto:${email}`}>{email}</a>
-                    <button
-                      onClick={copyEmail}
-                      className="icon-button copy-button"
-                      aria-label={t.copy}
-                      title={t.copy}
-                    >
-                      {copyStatus === "copied" ? (
-                        <Check size={15} />
-                      ) : (
-                        <Copy size={15} />
-                      )}
-                    </button>
-                  </div>
-                </article>
-                <article className="person-card yu-card">
-                  <div className="person-topline">
-                    <h3>
-                      Yu<span>{t.yuRole}</span>
-                    </h3>
-                    <span className="person-empty" aria-hidden="true">
-                      —
-                    </span>
-                  </div>
-                  <p className="person-pending">{t.pending}</p>
-                </article>
+                {people.map((person) => (
+                  <article className="person-card" key={person.id}>
+                    <div className="person-topline">
+                      <h3>
+                        {person.name}
+                        <span>{person.role}</span>
+                      </h3>
+                      <a
+                        href={`mailto:${person.email}`}
+                        className="person-email-action icon-button"
+                        aria-label={`${t.emailAction} — ${person.name}`}
+                      >
+                        <ArrowUpRight size={23} />
+                      </a>
+                    </div>
+                    <div className="person-email">
+                      <a href={`mailto:${person.email}`}>{person.email}</a>
+                      <button
+                        onClick={() => copyEmail(person.id, person.email)}
+                        className="icon-button copy-button"
+                        aria-label={`${t.copy} — ${person.name}`}
+                        title={t.copy}
+                      >
+                        {copyStatus?.person === person.id &&
+                        copyStatus.status === "copied" ? (
+                          <Check size={15} />
+                        ) : (
+                          <Copy size={15} />
+                        )}
+                      </button>
+                    </div>
+                  </article>
+                ))}
                 <p
-                  className={`copy-status ${copyStatus === "idle" ? "invisible" : ""}`}
+                  className={`copy-status ${copyStatus === null ? "invisible" : ""}`}
                   role="status"
                   aria-live="polite"
                 >
-                  {copyStatus === "failed" ? t.copyFailed : t.copied}
+                  {copyStatus?.status === "failed" ? t.copyFailed : t.copied}
                 </p>
               </div>
             </div>

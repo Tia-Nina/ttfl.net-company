@@ -919,15 +919,6 @@ h2 {
   align-items: center;
   font-weight: 500;
 }
-.platform-status {
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  padding: 4px 8px;
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  color: var(--muted);
-}
 .platform-placeholder {
   border-top: 1px solid var(--line);
   padding-top: 14px;
@@ -936,9 +927,6 @@ h2 {
   align-items: center;
   color: var(--muted);
   font-size: 10px;
-}
-.platform-placeholder > span:last-child {
-  margin-left: auto;
 }
 .status-dot {
   width: 4px;
@@ -1049,6 +1037,9 @@ h2 {
   padding-bottom: 20px;
   border-bottom: 1px solid #242b263d;
 }
+.person-card + .person-card {
+  padding-top: 22px;
+}
 .person-topline {
   display: flex;
   justify-content: space-between;
@@ -1060,9 +1051,10 @@ h2 {
   font-weight: 500;
 }
 .person-topline h3 > span {
-  display: inline-block;
-  margin-left: 16px;
+  display: block;
+  margin-top: 6px;
   font-size: 11px;
+  line-height: 1.6;
   color: #542f24;
   font-weight: 400;
 }
@@ -1093,19 +1085,6 @@ h2 {
   min-width: 32px;
   min-height: 32px;
   color: #552e22;
-}
-.yu-card {
-  padding-top: 22px;
-}
-.person-empty {
-  font-size: 22px;
-  padding-right: 10px;
-  color: #663b29;
-}
-.person-pending {
-  font-size: 11px;
-  margin-top: 10px;
-  color: #663b29;
 }
 .copy-status {
   min-height: 16px;
@@ -1262,19 +1241,11 @@ html[lang="ja"] .desktop-nav {
   .platform-info h3 {
     font-size: 17px;
   }
-  .platform-status {
-    font-size: 8px;
-  }
   .about-section {
     gap: 75px;
   }
   .contact-layout {
     gap: 50px;
-  }
-  .person-topline h3 > span {
-    display: block;
-    margin-left: 0;
-    margin-top: 4px;
   }
 }
 @media (max-width: 800px) {
@@ -1695,9 +1666,6 @@ html[lang="ja"] .desktop-nav {
   .platform-info h3 {
     font-size: 21px;
   }
-  .platform-status {
-    font-size: 10px;
-  }
   .platform-placeholder {
     font-size: 10px;
   }
@@ -1739,11 +1707,6 @@ html[lang="ja"] .desktop-nav {
   .contact-people {
     padding-top: 36px;
   }
-  .person-topline h3 > span {
-    display: inline-block;
-    margin-left: 18px;
-    font-size: 11px;
-  }
   .person-email {
     margin-top: 7px;
     font-size: 12px;
@@ -1754,7 +1717,7 @@ html[lang="ja"] .desktop-nav {
   .person-card {
     padding-bottom: 17px;
   }
-  .yu-card {
+  .person-card + .person-card {
     padding-top: 19px;
   }
   .site-footer {

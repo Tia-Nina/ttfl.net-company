@@ -40,8 +40,12 @@ export async function detectVisitorLanguage(
   return { language: resolveLanguage(preferredLanguages), source: "browser" };
 }
 
-export function contactEmail(language) {
-  return language.startsWith("zh") ? "tiatf@qq.com" : "linxtia@gmail.com";
+export function contactEmail(language, person = "lin") {
+  const emails =
+    person === "yu"
+      ? ["yumial@qq.com", "yuluo230519@gmail.com"]
+      : ["tiatf@qq.com", "linxtia@gmail.com"];
+  return emails[language.startsWith("zh") ? 0 : 1];
 }
 
 export function resolveTheme(preference, systemDark) {

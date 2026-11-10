@@ -13,6 +13,10 @@ test("Chinese uses QQ and other supported languages use Gmail", () => {
   assert.equal(contactEmail("zh-TW"), "tiatf@qq.com");
   assert.equal(contactEmail("en"), "linxtia@gmail.com");
   assert.equal(contactEmail("ja"), "linxtia@gmail.com");
+  assert.equal(contactEmail("zh-CN", "yu"), "yumial@qq.com");
+  assert.equal(contactEmail("zh-TW", "yu"), "yumial@qq.com");
+  assert.equal(contactEmail("en", "yu"), "yuluo230519@gmail.com");
+  assert.equal(contactEmail("ja", "yu"), "yuluo230519@gmail.com");
 });
 
 test("browser language priorities and fallback", () => {
